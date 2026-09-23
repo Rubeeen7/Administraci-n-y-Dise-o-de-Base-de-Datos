@@ -480,3 +480,81 @@ SELECT * FROM prestamos;
 ```
 
 Las consultas muestran los 5 autores, 8 libros y 5 préstamos insertados correctamente.
+
+## 5. Consultas básicas
+
+### 5.a Listado de libros con su autor
+
+Se muestran todos los libros registrados junto con el autor correspondiente.
+
+### Comando empleado
+
+```sql
+SELECT libros.titulo, autores.nombre AS autor
+FROM libros
+JOIN autores
+ON libros.id_autor = autores.id_autor;
+```
+
+### Salida obtenida
+
+```text
+               titulo                |          autor
+-------------------------------------+--------------------------
+ Cien años de soledad                | Gabriel Garcia Marquez
+ El amor en los tiempos del colera   | Gabriel Garcia Marquez
+ 1984                                | George Orwell
+ Rebelion en la granja               | George Orwell
+ Don Quijote de la Mancha            | Miguel de Cervantes
+ Harry Potter y la piedra filosofal  | J. K. Rowling
+ El resplandor                       | Stephen King
+ It                                  | Stephen King
+(8 rows)
+```
+### 5.b Préstamos pendientes de devolución
+
+Se muestran los préstamos que todavía no tienen una fecha de devolución registrada.
+
+### Comando empleado
+
+```sql
+SELECT *
+FROM prestamos
+WHERE fecha_devolucion IS NULL;
+```
+
+### Salida obtenida
+
+```text
+ id_prestamo | id_libro | fecha_prestamo | fecha_devolucion | usuario_prestatario
+-------------+----------+----------------+------------------+---------------------
+           2 |        2 | 2026-09-03     |                  | Pedro
+           4 |        4 | 2026-09-07     |                  | Carlos
+           5 |        5 | 2026-09-10     |                  | Ana
+(3 rows)
+```
+### 5.c Autores con más de un libro registrado
+
+Se obtienen los autores que tienen más de un libro registrado en la base de datos.
+
+### Comando empleado
+
+```sql
+SELECT autores.nombre, COUNT(libros.id_libro) AS numero_libros
+FROM autores
+JOIN libros
+ON autores.id_autor = libros.id_autor
+GROUP BY autores.id_autor, autores.nombre
+HAVING COUNT(libros.id_libro) > 1;
+```
+
+### Salida obtenida
+
+```text
+        nombre         | numero_libros
+-----------------------+--------------
+ Stephen King          |            2
+ George Orwell         |            2
+ Gabriel Garcia Marquez|            2
+(3 rows)
+```
