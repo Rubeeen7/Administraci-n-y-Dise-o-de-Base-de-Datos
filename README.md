@@ -286,3 +286,197 @@ psql -U usuario_biblio -d biblioteca -h localhost -W
 ```
 
 Tras introducir la nueva contraseña, se accede correctamente a PostgreSQL como `usuario_biblio`.
+
+### 2.f Restricción del permiso de eliminación
+
+Se configura el usuario `usuario_biblio` para que no pueda eliminar registros de las tablas de la base de datos.
+
+Como el usuario pertenece al rol `lectores`, se revoca el permiso `DELETE` tanto al usuario como al propio rol.
+
+### Comandos empleados
+
+```sql
+REVOKE DELETE ON ALL TABLES IN SCHEMA public FROM usuario_biblio;
+
+REVOKE DELETE ON ALL TABLES IN SCHEMA public FROM lectores;
+```
+
+### Salida obtenida
+
+```text
+REVOKE
+REVOKE
+```
+
+De esta forma, `usuario_biblio` no dispone de permisos para eliminar registros de las tablas.
+
+## 3. Creación de tablas
+
+### 3.a Creación de las tablas
+
+Se crean las tablas `autores`, `libros` y `prestamos`, definiendo sus respectivas claves primarias.
+
+### Comandos empleados
+
+```sql
+CREATE TABLE autores (
+    id_autor SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    nacionalidad VARCHAR(50)
+);
+```
+
+```sql
+CREATE TABLE libros (
+    id_libro SERIAL PRIMARY KEY,
+    titulo VARCHAR(150),
+    anio_publicacion INTEGER,
+    id_autor INTEGER
+);
+```
+
+```sql
+CREATE TABLE prestamos (
+    id_prestamo SERIAL PRIMARY KEY,
+    id_libro INTEGER,
+    fecha_prestamo DATE,
+    fecha_devolucion DATE,
+    usuario_prestatario VARCHAR(100)
+);
+```
+
+### Salida obtenida
+
+```text
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+```
+
+### Comprobación
+
+Para comprobar que las tablas se han creado correctamente se utiliza:
+
+```text
+\dt
+```
+
+### Salida obtenida
+
+```text
+           List of relations
+ Schema |   Name    | Type  |  Owner
+--------+-----------+-------+----------
+ public | autores   | table | postgres
+ public | libros    | table | postgres
+ public | prestamos | table | postgres
+```
+### 3.b Establecimiento de claves foráneas
+
+Se establecen las relaciones entre las tablas mediante claves foráneas.
+
+La tabla `libros` referencia a la tabla `autores` mediante el campo `id_autor`, mientras que la tabla `prestamos` referencia a la tabla `libros` mediante el campo `id_libro`.
+
+### Comandos empleados
+
+```sql
+ALTER TABLE libros
+ADD CONSTRAINT fk_libros_autores
+FOREIGN KEY (id_autor)
+REFERENCES autores(id_autor);
+```
+
+```sql
+ALTER TABLE prestamos
+ADD CONSTRAINT fk_prestamos_libros
+FOREIGN KEY (id_libro)
+REFERENCES libros(id_libro)
+ON DELETE CASCADE;
+```
+
+### Salida obtenida
+
+```text
+ALTER TABLE
+ALTER TABLE
+```
+
+### Comprobación
+
+Para comprobar las restricciones establecidas se consulta la definición de las tablas:
+
+```text
+\d libros
+```
+
+```text
+\d prestamos
+```
+
+En la salida aparecen las claves foráneas `fk_libros_autores` y `fk_prestamos_libros`, confirmando que las relaciones entre las tablas se han creado correctamente.
+
+## 4. Inserción de datos
+
+### 4.a Inserción de datos de ejemplo
+
+Se insertan 5 autores, 8 libros y 5 préstamos de ejemplo en las tablas creadas anteriormente.
+
+### Comandos empleados
+
+```sql
+INSERT INTO autores (nombre, nacionalidad) VALUES
+('Gabriel Garcia Marquez', 'Colombiana'),
+('George Orwell', 'Britanica'),
+('Miguel de Cervantes', 'Española'),
+('J. K. Rowling', 'Britanica'),
+('Stephen King', 'Estadounidense');
+```
+
+```sql
+INSERT INTO libros (titulo, anio_publicacion, id_autor) VALUES
+('Cien años de soledad', 1967, 1),
+('El amor en los tiempos del colera', 1985, 1),
+('1984', 1949, 2),
+('Rebelion en la granja', 1945, 2),
+('Don Quijote de la Mancha', 1605, 3),
+('Harry Potter y la piedra filosofal', 1997, 4),
+('El resplandor', 1977, 5),
+('It', 1986, 5);
+```
+
+```sql
+INSERT INTO prestamos
+(id_libro, fecha_prestamo, fecha_devolucion, usuario_prestatario)
+VALUES
+(1, '2026-09-01', '2026-09-10', 'Ana'),
+(2, '2026-09-03', NULL, 'Pedro'),
+(3, '2026-09-05', '2026-09-15', 'Lucia'),
+(4, '2026-09-07', NULL, 'Carlos'),
+(5, '2026-09-10', NULL, 'Ana');
+```
+
+### Salida obtenida
+
+```text
+INSERT 0 5
+INSERT 0 8
+INSERT 0 5
+```
+
+### Comprobación
+
+Para comprobar los datos insertados se realizan las siguientes consultas:
+
+```sql
+SELECT * FROM autores;
+```
+
+```sql
+SELECT * FROM libros;
+```
+
+```sql
+SELECT * FROM prestamos;
+```
+
+Las consultas muestran los 5 autores, 8 libros y 5 préstamos insertados correctamente.
