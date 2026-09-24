@@ -558,3 +558,141 @@ HAVING COUNT(libros.id_libro) > 1;
  Gabriel Garcia Marquez|            2
 (3 rows)
 ```
+## 6. Consultas con agregación
+
+### 6.a Número total de préstamos realizados
+
+Se calcula el número total de préstamos registrados en la tabla `prestamos`.
+
+### Comando empleado
+
+```sql
+SELECT COUNT(*) AS total_prestamos
+FROM prestamos;
+```
+
+### Salida obtenida
+
+```text
+ total_prestamos
+-----------------
+               5
+(1 row)
+```
+### 6.b Número de libros prestados por usuario
+
+Se obtiene el número de libros prestados por cada usuario registrado en la tabla `prestamos`.
+
+### Comando empleado
+
+```sql
+SELECT usuario_prestatario, COUNT(*) AS libros_prestados
+FROM prestamos
+GROUP BY usuario_prestatario;
+```
+
+### Salida obtenida
+
+```text
+ usuario_prestatario | libros_prestados
+---------------------+------------------
+ Carlos              |                1
+ Pedro               |                1
+ Ana                 |                2
+ Lucia               |                1
+(4 rows)
+```
+
+## 7. Modificación de datos
+
+### 7.a Actualización de la fecha de devolución
+
+Se actualiza la fecha de devolución de uno de los préstamos que se encontraba pendiente.
+
+### Comando empleado
+
+```sql
+UPDATE prestamos
+SET fecha_devolucion = '2026-09-20'
+WHERE id_prestamo = 2;
+```
+
+### Salida obtenida
+
+```text
+UPDATE 1
+```
+
+### Comprobación
+
+Para comprobar que la fecha de devolución se ha actualizado correctamente se consulta el préstamo modificado:
+
+```sql
+SELECT *
+FROM prestamos
+WHERE id_prestamo = 2;
+```
+
+### Salida obtenida
+
+```text
+ id_prestamo | id_libro | fecha_prestamo | fecha_devolucion | usuario_prestatario
+-------------+----------+----------------+------------------+---------------------
+           2 |        2 | 2026-09-03     | 2026-09-20       | Pedro
+(1 row)
+```
+### 7.b Eliminación de un libro y efecto en los préstamos
+
+Se elimina un libro que tiene préstamos asociados para comprobar el comportamiento de la clave foránea definida con `ON DELETE CASCADE`.
+
+### Comprobación previa
+
+Se consultan los préstamos asociados al libro con `id_libro = 4`:
+
+```sql
+SELECT *
+FROM prestamos
+WHERE id_libro = 4;
+```
+
+### Salida obtenida
+
+```text
+ id_prestamo | id_libro | fecha_prestamo | fecha_devolucion | usuario_prestatario
+-------------+----------+----------------+------------------+---------------------
+           4 |        4 | 2026-09-07     |                  | Carlos
+(1 row)
+```
+
+### Eliminación del libro
+
+```sql
+DELETE FROM libros
+WHERE id_libro = 4;
+```
+
+### Salida obtenida
+
+```text
+DELETE 1
+```
+
+### Comprobación posterior
+
+Se vuelve a consultar la tabla `prestamos` para comprobar si siguen existiendo registros asociados al libro eliminado:
+
+```sql
+SELECT *
+FROM prestamos
+WHERE id_libro = 4;
+```
+
+### Salida obtenida
+
+```text
+ id_prestamo | id_libro | fecha_prestamo | fecha_devolucion | usuario_prestatario
+-------------+----------+----------------+------------------+---------------------
+(0 rows)
+```
+
+El préstamo asociado se elimina automáticamente debido a la opción `ON DELETE CASCADE` definida en la clave foránea `fk_prestamos_libros`.
