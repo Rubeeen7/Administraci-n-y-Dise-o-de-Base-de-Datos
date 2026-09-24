@@ -696,3 +696,139 @@ WHERE id_libro = 4;
 ```
 
 El préstamo asociado se elimina automáticamente debido a la opción `ON DELETE CASCADE` definida en la clave foránea `fk_prestamos_libros`.
+
+## 8. Creación de vistas
+
+### 8.a Creación de la vista `vista_libros_prestados`
+
+Se crea una vista que muestra el título del libro, el autor y el usuario prestatario de cada préstamo registrado.
+
+### Comando empleado
+
+```sql
+CREATE VIEW vista_libros_prestados AS
+SELECT libros.titulo,
+       autores.nombre AS autor,
+       prestamos.usuario_prestatario
+FROM prestamos
+JOIN libros
+ON prestamos.id_libro = libros.id_libro
+JOIN autores
+ON libros.id_autor = autores.id_autor;
+```
+
+### Salida obtenida
+
+```text
+CREATE VIEW
+```
+
+### Comprobación
+
+Para comprobar el contenido de la vista se realiza la siguiente consulta:
+
+```sql
+SELECT * FROM vista_libros_prestados;
+```
+
+### Salida obtenida
+
+```text
+              titulo               |         autor          | usuario_prestatario
+-----------------------------------+------------------------+---------------------
+ Cien años de soledad              | Gabriel Garcia Marquez | Ana
+ 1984                              | George Orwell           | Lucia
+ Don Quijote de la Mancha          | Miguel de Cervantes     | Ana
+ El amor en los tiempos del colera | Gabriel Garcia Marquez | Pedro
+(4 rows)
+```
+### 8.b Permisos de consulta sobre la vista
+
+Se concede al usuario `usuario_biblio` permiso de consulta sobre la vista `vista_libros_prestados`.
+
+### Comando empleado
+
+```sql
+GRANT SELECT ON vista_libros_prestados TO usuario_biblio;
+```
+
+### Salida obtenida
+
+```text
+GRANT
+```
+
+### Comprobación
+
+Para comprobar los privilegios asignados sobre la vista se ejecuta:
+
+```text
+\dp vista_libros_prestados
+```
+
+### Salida obtenida
+
+```text
+                                  Access privileges
+ Schema |          Name           | Type |        Access privileges         | Column privileges | Policies
+--------+-------------------------+------+----------------------------------+-------------------+----------
+ public | vista_libros_prestados | view | postgres=arwdDxt/postgres       +|                   |
+        |                         |      | lectores=r/postgres             +|                   |
+        |                         |      | usuario_biblio=r/postgres        |                   |
+(1 row)
+```
+
+El privilegio `r` indica permiso de lectura (`SELECT`) sobre la vista.
+
+## 9. Funciones y consultas avanzadas
+
+### 9.a Función para obtener los libros de un autor
+
+Se crea una función que recibe el nombre de un autor y devuelve todos los libros escritos por dicho autor.
+
+### Comando empleado
+
+```sql
+CREATE OR REPLACE FUNCTION libros_por_autor(nombre_autor VARCHAR)
+RETURNS TABLE (
+    id_libro INTEGER,
+    titulo VARCHAR,
+    anio_publicacion INTEGER
+)
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT l.id_libro,
+           l.titulo,
+           l.anio_publicacion
+    FROM libros l
+    JOIN autores a
+    ON l.id_autor = a.id_autor
+    WHERE a.nombre = nombre_autor;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### Salida obtenida
+
+```text
+CREATE FUNCTION
+```
+
+### Comprobación
+
+Se prueba la función con el autor `George Orwell`:
+
+```sql
+SELECT *
+FROM libros_por_autor('George Orwell');
+```
+
+### Salida obtenida
+
+```text
+ id_libro | titulo | anio_publicacion
+----------+--------+------------------
+        3 | 1984   |             1949
+(1 row)
+```
