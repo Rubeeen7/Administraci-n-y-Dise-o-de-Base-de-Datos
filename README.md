@@ -832,3 +832,129 @@ FROM libros_por_autor('George Orwell');
         3 | 1984   |             1949
 (1 row)
 ```
+### 9.b Consulta de los tres libros más prestados
+
+Se obtiene el listado de los tres libros que más veces han sido prestados.
+
+### Comando empleado
+
+```sql
+SELECT libros.titulo,
+       COUNT(prestamos.id_prestamo) AS numero_prestamos
+FROM libros
+JOIN prestamos
+ON libros.id_libro = prestamos.id_libro
+GROUP BY libros.id_libro, libros.titulo
+ORDER BY numero_prestamos DESC
+LIMIT 3;
+```
+
+### Salida obtenida
+
+```text
+              titulo               | numero_prestamos
+-----------------------------------+-----------------
+ 1984                              |               1
+ Don Quijote de la Mancha          |               1
+ El amor en los tiempos del colera |               1
+(3 rows)
+```
+
+## 10. Exportación e importación de datos
+
+### 10.a Exportación de la tabla `libros` a CSV
+
+Se exporta el contenido de la tabla `libros` a un archivo CSV incluyendo los nombres de las columnas como cabecera.
+
+Debido a los permisos del sistema de archivos, el archivo se exporta inicialmente al directorio `/tmp`.
+
+### Comando empleado
+
+```text
+\copy libros TO '/tmp/libros.csv' CSV HEADER
+```
+
+### Salida obtenida
+
+```text
+COPY 7
+```
+
+Posteriormente se copia el archivo al directorio de la práctica:
+
+```bash
+cp /tmp/libros.csv ~/practica1-postgresql/libros.csv
+```
+
+### Comprobación
+
+Se comprueba el contenido del archivo generado mediante:
+
+```bash
+cat libros.csv
+```
+
+### Salida obtenida
+
+```text
+id_libro,titulo,anio_publicacion,id_autor
+1,Cien años de soledad,1967,1
+2,El amor en los tiempos del colera,1985,1
+3,1984,1949,2
+5,Don Quijote de la Mancha,1605,3
+6,Harry Potter y la piedra filosofal,1997,4
+7,El resplandor,1977,5
+8,It,1986,5
+```
+### 10.b Importación de autores desde un archivo CSV
+
+Se crea un archivo CSV externo con datos adicionales de autores:
+
+```csv
+nombre,nacionalidad
+Isaac Asimov,Estadounidense
+Julio Verne,Francesa
+Agatha Christie,Britanica
+```
+
+El archivo se copia al directorio `/tmp` para poder utilizarlo desde PostgreSQL:
+
+```bash
+cp ~/practica1-postgresql/autores_extra.csv /tmp/autores_extra.csv
+```
+
+### Comando empleado
+
+```text
+\copy autores(nombre,nacionalidad) FROM '/tmp/autores_extra.csv' CSV HEADER
+```
+
+### Salida obtenida
+
+```text
+COPY 3
+```
+
+### Comprobación
+
+Se comprueba que los nuevos autores se han añadido correctamente mediante:
+
+```sql
+SELECT * FROM autores;
+```
+
+### Salida obtenida
+
+```text
+ id_autor |         nombre          |  nacionalidad
+----------+-------------------------+-----------------
+        1 | Gabriel Garcia Marquez  | Colombiana
+        2 | George Orwell           | Britanica
+        3 | Miguel de Cervantes     | Española
+        4 | J. K. Rowling           | Britanica
+        5 | Stephen King            | Estadounidense
+        6 | Isaac Asimov            | Estadounidense
+        7 | Julio Verne             | Francesa
+        8 | Agatha Christie         | Britanica
+(8 rows)
+```
