@@ -49,7 +49,7 @@ CREATE ROLE
 
 ### Comprobación
 
-Para comprobar que los usuarios se han creado correctamente, se consulta la tabla del sistema `pg_roles`:
+Para comprobar que los usuarios se han creado correctamente se consulta la tabla del sistema `pg_roles`:
 
 ```sql
 SELECT rolname
